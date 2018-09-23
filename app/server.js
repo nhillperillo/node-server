@@ -1,31 +1,47 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const path = require("path");
-const http = require("http");
-const app = express();
-
-// API file for interacting with MongoDB
-const api = require("./server/routes/api");
-
-// Parsers
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-// Angular DIST output folder
-app.use(express.static(path.join(__dirname, "dist")));
-
-// API location
-app.use("/api", api);
-
-// Send all other requests to the Angular app
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist/index.html"));
-});
-
-//Set Port
-const port = process.env.PORT || "3000";
-app.set("port", port);
-
-const server = http.createServer(app);
-
-server.listen(port, () => console.log(`Running on localhost:${port}`));
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var body_parser_1 = __importDefault(require("body-parser"));
+var express_1 = __importDefault(require("express"));
+var router_1 = __importDefault(require("./router"));
+var config_1 = require("./config");
+var Server = /** @class */ (function () {
+    function Server() {
+        this.serverApp = express_1.default();
+        this.appRouter = new router_1.default(this.serverApp);
+    }
+    Server.prototype.config = function (serverApp) {
+        serverApp.use(body_parser_1.default.json({ limit: "50mb" }));
+        serverApp.use(body_parser_1.default.urlencoded({
+            extended: true,
+            limit: "50mb",
+            parameterLimit: 100000000
+        }));
+        serverApp.use(function (req, res, next) {
+            res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-Width, Content-Type, Accept, Authorization");
+            res.header("Access-Control-Allow-Credentials", "true");
+            // Intercept OPTIONS Method
+            if (req.method == "OPTIONS") {
+                res.header("Access-Control-Allow-Method", "GET,POST,PATCH,DELETE,PUT");
+                res.send(200);
+            }
+            else {
+                next();
+            }
+        });
+    };
+    Server.prototype.routes = function (serverApp, routerlink) {
+        serverApp.use(function (req, res, next) {
+            if (!serverApp.get("mongoConnection")) {
+                var conString = config_1.Config.MONGO_CON_URL;
+            }
+            else {
+            }
+        });
+    };
+    return Server;
+}());
+exports.default = new Server();
